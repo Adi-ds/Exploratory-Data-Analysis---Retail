@@ -1,0 +1,255 @@
+---
+title: "Exploratory Data Analysis - Retail"
+author: "Aditya Dawn"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **Objective**  
+Here, we are given to do Exploratory Data Analysis on a Super Store.  
+
+#### *Tool Used*  
+* R and Python for Data Analysis.  
+* R Markdown for this report.    
+
+##### Set-up of R Markdown  
+Before starting Analysis, I want to make my work-space suitable for the use of both of R and Python.  
+```{r echo=TRUE}
+library(reticulate)
+use_python("/usr/local/bin/python")
+use_virtualenv("~/myenv")
+use_condaenv("myenv")
+```
+
+Now we are ready to do the Data Analysis.  
+
+## **Import of Data**  
+```{r echo=TRUE}
+df <- read.csv("/home/adi/Documents/Aditya/TSF-GRIPFEB21/SampleSuperstore.csv", header = TRUE)
+```  
+## **Pre-processing of the Data**  
+For, making the Data suitable for Analysis, the $DataExplorer$ of R package is used.  
+```{r echo=TRUE}
+library(DataExplorer)
+```
+
+### *Missing Value Treatment*  
+```{r echo=TRUE}
+plot_missing(df)
+```
+The plot clearly shows that there are no missing values.  
+
+### *Variables*  
+```{r echo=TRUE}
+library(dplyr)
+```
+
+* *Categorical Variables*  
+
+```{r echo=TRUE}
+df %>% select_if(is.character) %>% head(2)
+```
+The above output shows the features with class "Character". In this case, we have 8 Categorical Features.  
+
+* *Numerical Variables*  
+```{r echo=TRUE}
+df %>% select_if(is.numeric) %>% head(2)
+```
+The above output shows the features with class "Numeric". In this case, we have 5 feature with class "Numeric".  
+
+#### *Removal of unwanted features*  
+The "Postal.Code" feature will not be helping much in this context. So, we can remove it.  
+```{r echo=TRUE}
+df <- df[,-6]
+```
+
+
+
+```{python echo=TRUE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+```
+
+## **Visualization of Categorical Variables**  
+1. *Ship Mode*  
+
+```{python echo=TRUE}
+r.df['Ship.Mode'].unique()
+```
+```{python echo=TRUE}
+sns.countplot(x=r.df['Ship.Mode'])
+plt.show()
+```
+
+
+2. *Segment*  
+
+```{python echo=TRUE}
+r.df['Segment'].unique()
+```
+
+```{python echo=TRUE}
+sns.countplot( x = r.df['Segment'] )
+plt.show()
+```
+
+
+3. *Country*  
+```{python echo=TRUE}
+r.df['Country'].unique()
+```
+So, the feature "Country" has only one character. So, we can remove it.  
+```{r echo=TRUE}
+df <- df[,-3]
+```
+
+4. *City*  
+```{python echo=TRUE}
+r.df['City'].unique()
+```
+
+5. *State*  
+
+```{python echo=TRUE}
+r.df['State'].unique()
+```
+```{python echo=TRUE}
+plt.figure(figsize = (10,10))
+sns.countplot(x=r.df['State'])
+plt.xticks(rotation = -90)
+plt.show()
+```
+
+6. *Region*  
+
+```{python echo=TRUE}
+r.df['Region'].unique()
+```
+```{python echo=TRUE}
+sns.countplot(x=r.df['Region'])
+plt.show()
+```
+
+7. *Category*  
+```{python echo=TRUE}
+r.df['Category'].unique()
+```
+```{python echo=TRUE}
+sns.countplot(x=r.df['Category'])
+plt.show()
+```
+
+8. *Sub-Category*  
+```{python echo=TRUE}
+r.df['Sub.Category'].unique()
+```
+```{python echo=TRUE}
+sns.countplot(x=r.df['Sub.Category'])
+plt.xticks(rotation = -45)
+plt.show()
+```
+
+## **Visualization of Numerical Variables**  
+
+```{python echo=TRUE}
+r.df.hist(bins=50 ,figsize=(20,15))
+plt.show()
+```
+
+
+```{python echo=TRUE}
+sns.pairplot(r.df,hue='Sub.Category')
+plt.show()
+```
+
+
+
+```{python echo=TRUE}
+sns.heatmap(r.df.corr())
+```
+
+### **Analysis of the above visualizations taking two at a time**  
+1. *Sales vs Quantity*  
+```{r echo=TRUE}
+library(ggplot2)
+ggplot(data = df, 
+       aes(x = Quantity, y = Sales, fill = Ship.Mode) ) +
+  geom_bar(stat = "identity") 
+```
+**Clearly, most of the sales have been caused by the standard class of shipment mode.**  
+
+2. *Profit vs Sales* (based on Ship Mode)  
+```{r echo=TRUE}
+ggplot(data = df, 
+       aes(x = Sales, y = Profit, color = Ship.Mode)) + 
+  geom_point()
+```
+**As a result, more profit and loss have been availed from the standard shipment class. But, there are not higher range profits seen due to the other features.**  
+
+3. *Sales vs Discount*  
+```{r echo=TRUE}
+ggplot() + geom_point(data = df, 
+                      aes(x = Discount, 
+                          y = Sales, 
+                          color = Ship.Mode)) 
+```
+
+* **From the above graph, it can be seen that sales are attracted more by discounts.**  
+* **Discounts attract mostly the Standard Class shipment.**  
+* **Same day shipment mode get the least discount offers.**  
+
+4. *Profit vs Discount*  
+
+```{r echo=TRUE}
+ggplot() + 
+  geom_bar(data = df, 
+           aes(x = Discount, y = Profit, fill = Ship.Mode), stat = "identity") 
+```
+**Here it is clear that, Discount and Profit has a kind of inverse relation with each other. The segments with more discounts, made lesser profits.**  
+
+5. *Profit vs Sub-Category*  
+```{r echo=TRUE}
+ggplot() + 
+  geom_bar(data = df, aes(x = Sub.Category, y = Profit, fill = Region), stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+**From the above diagram, it is clear that the Blinders faced maximum loss, followed by the Tables and the Machines in the Central Region.**  
+
+6. *Sales vs Category*  
+```{r echo=TRUE}
+ggplot() + 
+  geom_bar(data = df, aes(x = Category, y = Sales, fill = Region), stat = "identity") +       
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+**The above diagram shows that, Technology made most of the sales, followed by Furniture and Office Supplies, mainly in the regions of West, followed by Central.**  
+
+7. *Profit vs Category*  
+
+```{r echo=TRUE}
+ggplot() + 
+  geom_bar(data = df, aes(x = Category, y = Profit, fill = Region), stat = "identity") +      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+**Here it can be seen that, the maximum profit is made by Technology, followed by Office Supplies and Furniture.**  
+
+8. *Profit vs Sales* (based on Category)  
+```{r echo=TRUE}
+ggplot() + geom_point(data = df, aes(x = Sales, y = Profit, color = Category)) 
+```
+**Here, it is clear that, the relation between Profit and Sale is more of less linear.**  
+
+
+
+## **Insights**   
+* Shipment Mode other than Standard Class should be promoted more.  
+* Unnecessary Discounts with low rates can face risk.  
+* The loss in Furniture should be taken care.  
+* It is requested to look into the sales growth of the Categories in the Regions of East and South.  
+  
+  
+## THANK YOU!  
