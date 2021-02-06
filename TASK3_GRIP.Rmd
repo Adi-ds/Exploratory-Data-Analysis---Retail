@@ -3,8 +3,6 @@ title: "Exploratory Data Analysis - Retail"
 author: "Aditya Dawn"
 output:
   html_document: default
-  pdf_document: default
-  word_document: default
 ---
 
 ```{r setup, include=FALSE}
